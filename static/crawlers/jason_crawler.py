@@ -7,6 +7,10 @@ from tqdm import tqdm
 from pathlib import Path
 import os
 
+headers = {
+    'User-Agent': "FantasticAgent"
+}
+
 ## =================================================
 ## vvv FUNCTIONS vvv 
 
@@ -44,7 +48,7 @@ def normalize_url(url):
 # This function takes in a url and crawls the page.
 # It retrieves every viable link from the page and records it. 
 def crawl_page(url):
-    response = requests.get(url) # Get the info from the page
+    response = requests.get(url, headers=headers) # Get the info from the page
     soup = bs(response.text, 'html.parser') # Parse the html
     links = soup.find_all('a',href=parse_url) # Find all <a> links 
     current_index = get_url_index(url) # Get current index in order to interact with adjacency matrix
