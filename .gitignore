@@ -2,3 +2,4 @@ html_files
 .DS_Store
 *.pickle
 __pycache__
+logs/*

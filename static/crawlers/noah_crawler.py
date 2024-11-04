@@ -3,31 +3,32 @@
 ## Washington State University
 ## Ben McCamish
 import requests
-from hashlib import sha256
 import base64
+from useragent import user_agent
+
 from bs4 import BeautifulSoup
 from collections import deque
+from urllib.request import urlopen
 from urllib.parse import urlparse
 from urllib.robotparser import RobotFileParser
-import numpy as np
-import pickle
-import os
+
+from tqdm import tqdm # For progress bar
+import numpy as np # For adjacency matrix
+import pickle # For saving objects
+import os # For file handling
+from time import sleep # For rate limiting
 
 START_NEW = False
+headers = user_agent
 
 class Crawler(object):
 
-    def __init__(self, root_scheme, root_host, save_freq = 50, scan_target = 5000):
+    def __init__(self, root_host, save_freq = 50, scan_target = 5000):
 
         # Domain-related variables
         self.root_scheme = "https"
-        self.root_host = "www.nps.gov"
-        self.root_url = f"{root_scheme}://{root_host}"
-
-        # Robots parser
-        self.rp = RobotFileParser()
-        self.rp.set_url(f"{self.root_url}/robots.txt")
-        self.rp.read()
+        self.root_host = root_host
+        self.root_url = f"{self.root_scheme}://{root_host}"
         
         # Save-related variables
         self.save_freq = save_freq
@@ -35,10 +36,14 @@ class Crawler(object):
 
         # START_NEW allows the crawl to be restarted, if set to true.
         if START_NEW:
+            # Create a new error log
+            self.error_log = open("logs/error_log.txt", "w+")
             self.outgoing_links = {self.root_url: []}
             self.queue = deque([self.root_url])
             self.links_scanned = 0
         else:
+            # Load the crawl from the saved objects and error log
+            self.error_log = open("logs/error_log.txt", "a+")
             self.load_crawl()
 
     # Saves the outgoing links dictionary as a adjacency matrix    
@@ -81,7 +86,7 @@ class Crawler(object):
             with open("crawler_pkls/url_queue.pkl", "rb") as f: self.queue = pickle.load(f)
             # Scan Count
             with open("crawler_pkls/scan_count.pkl", "rb") as f: self.links_scanned = pickle.load(f)
-        
+
             # Flip the lookup table to access indices by url
             index_url = {i: url for url, i in url_index.items()}
 
@@ -95,6 +100,7 @@ class Crawler(object):
 
         # If a pkl file is not found, just start a new crawl.
         except FileNotFoundError as e:
+            self.error_log = open("logs/error_log.txt", "a+")
             print("No existing objects found, starting a new crawl!")
             self.outgoing_links = {self.root_url:[]}
             self.queue = deque([self.root_url])
@@ -102,55 +108,61 @@ class Crawler(object):
         
 
     def begin_crawl(self):
-        while self.queue:
-            # Pop URL L from front of queue (left side)
-            link = self.queue.popleft()
+        with tqdm(total=self.scan_target, desc="Crawling...") as pbar:
+            
+            while self.queue:
+                # Pop URL L from front of queue (left side)
+                link = self.queue.popleft()
 
-            try:
-                print(f"Scanning {link:100} Pages Seen: {len(self.outgoing_links)} | Pages Left To Scan: {len(self.queue) + 1} | Total Pages Scanned: {self.links_scanned}")
-                # If L is not an HTML Page
-                response = requests.get(link)
-                
-                # Skip non-html files
-                if not "text/html" in response.headers["content-type"]: continue
-                
-                # Parse page with soup
-                soup = BeautifulSoup(response.content, "html.parser")    # Save content or continue loop
+                try:
+                    # If L is not an HTML Page
+                    response = requests.get(link, headers=headers)
+                    
+                    # Skip non-html files
+                    if not "text/html" in response.headers["content-type"]:
+                        continue
+                    
+                    # Parse page with soup
+                    soup = BeautifulSoup(response.content, "html.parser")    # Save content or continue loop
 
-                if not os.path.exists("sites"):
-                    os.mkdir("sites")
+                    if not os.path.exists("sites"):
+                        os.mkdir("sites")
 
-                # Encode and hash the link name for easy file storage, then write the page content to it.
-                with open(f"./sites/{base64.urlsafe_b64encode(link.encode()).decode()}", "w+", encoding="utf-8") as f:
-                    f.write(soup.prettify())
+                    # Encode and hash the link name for easy file storage, then write the page content to it.
+                    with open(f"./sites/{base64.urlsafe_b64encode(link.encode()).decode()}", "w+", encoding="utf-8") as f:
+                        f.write(soup.prettify())
 
-                # Check all hrefs in the page
-                for tag in soup.find_all(href=True):
-                    # If it is a valid and full link...
-                    full_link = self.complete_link(tag["href"])
-                    if full_link and full_link not in self.outgoing_links:
-                        #...add it to the dictionary with no outgoing links, add it to the outgoing links from the source, and add it to the queue.
-                        self.outgoing_links[full_link] = []
-                        self.outgoing_links[link].append(full_link)
-                        self.queue.append(full_link)
-                
-                # Keep track of how many links we scanned for saving
-                self.links_scanned += 1
-                if self.links_scanned % self.save_freq == 0:
-                    self.save_crawl()
-                    print("Crawl saved!")
-                if self.links_scanned >= self.scan_target:
-                    print("Crawl complete!")
-                    return
+                    # Check all hrefs in the page
+                    for tag in soup.find_all(href=True):
+                        # If it is a valid and full link...
+                        full_link = self.complete_link(tag["href"])
+                        if full_link and full_link not in self.outgoing_links:
+                            #...add it to the dictionary with no outgoing links, add it to the outgoing links from the source, and add it to the queue.
+                            self.outgoing_links[full_link] = []
+                            self.outgoing_links[link].append(full_link)
+                            self.queue.append(full_link)
+                    
+                    # Keep track of how many links we scanned for saving
+                    self.links_scanned += 1
+                    pbar.update(1)
+                    sleep(0.5)
+                    if self.links_scanned % self.save_freq == 0:
+                        self.save_crawl()
 
-            # Not the best error handling, but it works well enough.
-            except Exception as e:
-                print(f"[!] Error accessing \'{link}\ - {e}'")
+                    if self.links_scanned >= self.scan_target:
+                        print("Crawl complete!")
+                        self.save_crawl()
+                        self.error_log.close()
+                        return
+
+                # Not the best error handling, but it works well enough.
+                except Exception as e:
+                    self.error_log.write(f"[!] Error accessing \'{link}\' - {e}")
 
     def complete_link(self, link):
 
         # If this link is a site resource, don't use it
-        if "/common/" in link or "/commonspot/" in link or "./" in link or '/planyourvisit/' in link: return None
+        if "/common/" in link or "/commonspot/" in link or "./" in link: return None
 
         # Parse the link and remove any unnecessary elements (fragments and queries)
         url = urlparse(link)
@@ -166,9 +178,8 @@ class Crawler(object):
         final_link = url.geturl().rstrip("/")
 
         # Dont return empty links or disallowed links
-        return final_link if (final_link and self.rp.can_fetch("*", final_link)) else None
-
+        return final_link
 
 if __name__ == "__main__":
-    crawler = Crawler("https", "www.nps.gov", scan_target=3000)
+    crawler = Crawler("www.coppermind.net", scan_target=100)
     crawler.begin_crawl()
