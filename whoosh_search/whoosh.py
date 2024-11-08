@@ -78,12 +78,13 @@ class Whoosh_Search:
             count = self.return_count if len(results) >= self.return_count else len(results)
             if count == 0:
                 print("No results found for query: {query_string}")
+                return [] 
             else: 
                 print(f"First {count} result:")
                 file_names = [result['file_name'] for result in results[:count]]
                 for i in range(count):
                     print(file_names[i])
-            return file_names if file_names else [] 
+                return file_names 
 
     # rebuilds the index by setting the indexed flag to false and calling write()
     def rebuild(self):
