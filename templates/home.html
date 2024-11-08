@@ -2,9 +2,21 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="title_text text-center">Fantastic Machine</h1>
-    <div class="input-group mb-3 mt-5">
-        <button class="btn btn-outline-secondary" type="button" id="search_button">Search</button>
-        <input type="text" class="form-control" placeholder="Enter a fantastic query here" aria-label="Search query" aria-describedby="search_button">
-    </div>
+    <form method="POST">
+        <div class="input-group mb-3 mt-5">
+            <button class="btn btn-outline-secondary" type="submit" id="search_button">Search</button>
+            <input type="text" name="query" class="form-control" placeholder="Enter a fantastic query here" aria-label="Search query" aria-describedby="search_button">
+        </div>
+    </form>
 </div>
+
+{% if results %}
+    <ul>
+        {% for file_name in results %}
+            <li>{{file_name}}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
+ 
 {% endblock %}

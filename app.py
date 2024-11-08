@@ -1,11 +1,15 @@
-from flask import Flask, render_template
-
-
+from flask import Flask, render_template, request
+from whoosh_search.whoosh import Whoosh_Search
 
 app = Flask(__name__)
+search = Whoosh_Search()
 
-@app.route("/")
+@app.route("/", methods=["GET","POST"])
 def home():
+    if request.method == "POST":
+        query = request.form.get("query", "")
+        results = search.retrieve(query)
+        return render_template("home.html", results=results)
     return render_template("home.html")
 
 if __name__ == "__main__":
