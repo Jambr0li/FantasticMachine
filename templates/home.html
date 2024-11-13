@@ -12,8 +12,11 @@
 
 {% if results %}
     <ul>
-        {% for file_name in results %}
-            <li>{{file_name}}</li>
+        {% for link, content in results %}
+            <li>
+                <a href="{{link}}">{{link}}</a>
+                <p>{{content}}</p>
+            </li>
         {% endfor %}
     </ul>
 {% endif %}

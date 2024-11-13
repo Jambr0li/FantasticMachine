@@ -5,6 +5,7 @@ from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser, AndGroup, OrGroup
 from bs4 import BeautifulSoup
+import base64
 
 
 
@@ -12,7 +13,7 @@ class Whoosh_Search:
     # intializes data and builds the index
     def __init__(self): 
         self.return_count = 10
-        schema = Schema(file_name=ID(stored=True, unique=True), cleaned_content=TEXT)
+        schema = Schema(file_name=ID(stored=True, unique=True), cleaned_content=TEXT(stored=True))
         indexdir = "indexdir"
         self.indexed = False
         self.and_group = True
@@ -39,7 +40,7 @@ class Whoosh_Search:
     # loads data into the whoosh index
     def write(self):
         writer = self.ix.writer()
-        html_directory = "html_files" # This is the name of the directory with the content we want to parse
+        html_directory = "sites" # This is the name of the directory with the content we want to parse
         if self.indexed: # If already indexed then we skip 
             doc_count = self.ix.doc_count()
             print(f"The index contains {doc_count} documents.")
@@ -75,16 +76,26 @@ class Whoosh_Search:
             query = QueryParser("cleaned_content", self.ix.schema,group=AndGroup).parse(query_string) if self.and_group else QueryParser("cleaned_content", self.ix.schema,group=OrGroup).parse(query_string)
             results = searcher.search(query,limit=self.return_count)
             print(f"Found {len(results)} results for query: {query_string}")
-            count = self.return_count if len(results) >= self.return_count else len(results)
+            count = min(self.return_count, len(results))
+            # count = self.return_count if len(results) >= self.return_count else len(results)
             if count == 0:
                 print("No results found for query: {query_string}")
                 return [] 
             else: 
                 print(f"First {count} result:")
-                file_names = [result['file_name'] for result in results[:count]]
-                for i in range(count):
-                    print(file_names[i])
-                return file_names 
+                result_items = []
+                for result in results[:count]:
+                    file_name = result['file_name']
+                    content_snippet = result['cleaned_content'][:200]
+                    # result_items.append({
+                        # 'file_name': file_name,
+                        # 'content_snippet': content_snippet
+                    # })
+                    result_items.append((base64.urlsafe_b64decode(file_name.encode()).decode(), content_snippet))
+                return result_items
+                # for i in range(count):
+                    # print(file_names[i])
+                # return file_names 
 
     # rebuilds the index by setting the indexed flag to false and calling write()
     def rebuild(self):
@@ -98,3 +109,5 @@ class Whoosh_Search:
     # updates the maximum return count value 
     def set_return_count(self, count):
         self.return_count = count
+
+searcher = Whoosh_Search()
