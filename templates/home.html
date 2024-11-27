@@ -2,24 +2,55 @@
 {% block content %}
 <div class="container mt-5">
     <h1 class="title_text text-center">Fantastic Machine</h1>
-    <form method="POST">
-        <div class="input-group mb-3 mt-5">
-            <button class="btn btn-outline-secondary" type="submit" id="search_button">Search</button>
-            <input type="text" name="query" class="form-control" placeholder="Enter a fantastic query here" aria-label="Search query" aria-describedby="search_button">
+    <div class="row mt-5 g-3">
+        <div class="col-md-6">
+            <form method="POST">
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-secondary" type="submit" id="search_button">Search</button>
+                    <input type="text" name="query" class="form-control" placeholder="Enter a fantastic query here" aria-label="Search query" aria-describedby="search_button", value="{{query}}">
+                </div>
+            </form>
         </div>
-    </form>
+        <div class="col-md-6">
+            <form method="POST">
+                <div class="input-group mb-3">
+                    <button class="btn btn-outline-inquire" type="submit" id="inquire_button">Inquire</button>
+                    <input type="text" name="inquire" class="form-control" placeholder="Inquire with our fantastic AI" aria-label="Inquire query" aria-describedby="inquire_button" value="{{inquire}}">
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
-
-{% if results %}
-    <ul>
-        {% for link, content in results %}
-            <li>
-                <a href="{{link}}">{{link}}</a>
-                <p>{{content}}</p>
-            </li>
-        {% endfor %}
-    </ul>
+{% if ai_response %}
+    <div class="d-flex justify-content-center mt-5">
+        <div class="rounded-box inquire mx-3">
+            <div class="d-flex align-items-center mb-3">
+                <img src="{{ url_for('static', filename='images/wand.png') }}" alt="Wand Icon" class="wand-icon">
+                <h2 class="ms-2 mb-0">Fantastic Overview</h2>
+            </div>
+            <h4>{{ ai_response[0] }}</h4>
+            <h3>Sources</h3>
+            <ul>
+                {% for source in ai_response[1] %}
+                    <li><a href="{{ source }}">{{ source }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>    
+    </div>
+    
 {% endif %}
 
- 
+{% if results %}
+    
+    {% for link, content in results %}
+        <div class="d-flex justify-content-center mt-2">
+            <div class="rounded-box query mx-3">
+                <a href="{{link}}">{{link}}</a>
+                <p>{{content}}</p>
+            </div>    
+        </div>
+    {% endfor %}
+
+{% endif %}
+
 {% endblock %}

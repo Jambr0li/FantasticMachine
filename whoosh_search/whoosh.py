@@ -6,8 +6,7 @@ from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser, AndGroup, OrGroup
 from bs4 import BeautifulSoup
 import base64
-
-
+import tqdm
 
 class Whoosh_Search:
     # intializes data and builds the index
@@ -46,7 +45,7 @@ class Whoosh_Search:
             print(f"The index contains {doc_count} documents.")
             return
 
-        for file_name in os.listdir(html_directory):
+        for file_name in tqdm.tqdm(os.listdir(html_directory), desc="Indexing files..."):
             file_path = os.path.join(html_directory,file_name)
             # check if file is already in the index
             with self.ix.searcher() as searcher:
