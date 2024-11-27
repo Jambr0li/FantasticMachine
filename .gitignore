@@ -1,6 +1,9 @@
 sites
 .DS_Store
-*.pickle
+crawler_pkls
 __pycache__
 indexdir
-indexdir
+ai_search/data
+.env
+static/crawlers/useragent.py
+chroma
