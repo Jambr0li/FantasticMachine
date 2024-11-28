@@ -7,3 +7,5 @@ ai_search/data
 .env
 static/crawlers/useragent.py
 chroma
+word2vec/corpus.pkl
+word2vec/model/*
