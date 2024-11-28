@@ -11,11 +11,11 @@ import tqdm
 class Whoosh_Search:
     # intializes data and builds the index
     def __init__(self): 
-        self.return_count = 10
+        self.return_count = 100
         schema = Schema(file_name=ID(stored=True, unique=True), cleaned_content=TEXT(stored=True))
         indexdir = "indexdir"
         self.indexed = False
-        self.and_group = True
+        self.and_group = False 
         if not os.path.exists(indexdir): # Check if index exists already
             os.mkdir(indexdir)
             self.ix = create_in(indexdir, schema)

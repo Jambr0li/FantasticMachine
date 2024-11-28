@@ -15,7 +15,7 @@
 }
 
 body {
-	background: linear-gradient(-45deg, #4bdb46, #0c794f, #7e2da3, #23d5ab);
+	background: linear-gradient(-45deg, #c77878, #a7dac6, #dca9f3, #7479b4);
 	background-size: 400% 400%;
 	animation: gradient 30s ease infinite;
 	height: 100vh;
@@ -67,6 +67,7 @@ body {
   max-width: 1000px;
   margin: 0 auto;
   border: 2px solid black;
+  box-shadow: 5px 10px 5px;
 }
 
 .inquire {
@@ -74,7 +75,8 @@ body {
 }
 
 .query {
-  background: linear-gradient(135deg, #572674 0%, #532174 100%);
+  /* background: linear-gradient(135deg, #572674 0%, #532174 100%); */
+  background: #ecfcff;
 }
 
 .rounded-box h2, .rounded-box h3, .rounded-box p {
@@ -92,4 +94,20 @@ body {
 .wand-icon {
   width: 40px;
   height: 40px;
+}
+
+.pagination-btn {
+  background-color: #ecfcff;
+}
+
+.pagination-btn:hover {
+  background-color: #c17fdf;
+  border-style: solid;
+  border-color: #000000;
+}
+
+.pagination-btn:disabled {
+  background-color: #ecfcff;
+  border-style: none;
+  opacity: 0.5;
 }
