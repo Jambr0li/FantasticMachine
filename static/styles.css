@@ -95,3 +95,19 @@ body {
   width: 40px;
   height: 40px;
 }
+
+.pagination-btn {
+  background-color: #ecfcff;
+}
+
+.pagination-btn:hover {
+  background-color: #c17fdf;
+  border-style: solid;
+  border-color: #000000;
+}
+
+.pagination-btn:disabled {
+  background-color: #ecfcff;
+  border-style: none;
+  opacity: 0.5;
+}
