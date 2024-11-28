@@ -2,6 +2,7 @@ from flask import Flask, render_template, request
 from whoosh_search.whoosh import Whoosh_Search
 from ai_search.searcher import AISearcher
 from gensim.models import Word2Vec
+import string
 
 app = Flask(__name__)
 search = Whoosh_Search()
@@ -14,6 +15,9 @@ def home():
     if request.method == "POST":
         query = request.form.get("query", "")
         inquire = request.form.get("inquire", "")
+        page = int(request.form.get("page", 1))
+
+        query = query.translate(str.maketrans('', '', string.punctuation))
 
         if query:
             print("query")
@@ -34,11 +38,23 @@ def home():
 
             related_results = search.retrieve(extended_query) if extended_query else []
 
+            per_page_count = 10
+            regular_total_page_count = len(regular_results)
+            related_total_page_count = len(related_results)
+            regular_pages = (regular_total_page_count - 1) // per_page_count + 1
+            related_pages = (related_total_page_count - 1) // per_page_count + 1
+
+            paginated_regular_results = regular_results[(page - 1) * per_page_count : page * per_page_count]
+            paginated_related_results= regular_results[(page - 1) * per_page_count : page * per_page_count]
+
             return render_template(
                 "home.html",
-                regular_results=regular_results,
-                related_results=related_results,
+                regular_results=paginated_regular_results,
+                related_results=paginated_related_results,
                 related_words=similar_words, 
+                page=page,
+                regular_pages=regular_pages,
+                related_pages=related_pages,
                 query=query)
         
         elif inquire:
