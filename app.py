@@ -9,6 +9,7 @@ search = Whoosh_Search()
 ai = AISearcher()
 
 model = Word2Vec.load("word2vec/model/word2vec.model")
+print(model)
 
 @app.route("/", methods=["GET","POST"])
 def home():
@@ -22,6 +23,7 @@ def home():
         if query:
             print("query")
             regular_results = search.retrieve(query)
+            print('\n'.join([result[0] for result in regular_results][:10]))
 
             # get the related words from my word2vec model
             query_words = query.lower().split()
@@ -37,6 +39,7 @@ def home():
             extended_query = ' '.join(related_words)
 
             related_results = search.retrieve(extended_query) if extended_query else []
+            print("\n".join([result[0] for result in related_results][:10]))
 
             per_page_count = 10
             regular_total_page_count = len(regular_results)
@@ -45,7 +48,7 @@ def home():
             related_pages = (related_total_page_count - 1) // per_page_count + 1
 
             paginated_regular_results = regular_results[(page - 1) * per_page_count : page * per_page_count]
-            paginated_related_results= regular_results[(page - 1) * per_page_count : page * per_page_count]
+            paginated_related_results= related_results[(page - 1) * per_page_count : page * per_page_count]
 
             return render_template(
                 "home.html",

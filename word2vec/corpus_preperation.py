@@ -2,6 +2,7 @@ import os
 import string
 import pickle
 from bs4 import BeautifulSoup
+import tqdm
 
 def clean_text(html_content):
     soup = BeautifulSoup(html_content, 'html.parser')
@@ -23,7 +24,7 @@ def get_corpus():
         # Process and clean the corpus
         corpus = []
         html_directory = "sites"
-        for file_name in os.listdir(html_directory):
+        for file_name in tqdm.tqdm(os.listdir(html_directory), desc="Tokenizing corpus..."):
             file_path = os.path.join(html_directory, file_name)
             with open(file_path, 'r', encoding='utf-8') as f:
                 html_content = f.read()
