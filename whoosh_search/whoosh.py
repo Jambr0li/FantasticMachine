@@ -1,10 +1,10 @@
 import os
 import string
 from whoosh.index import create_in, open_dir
-from whoosh import index
 from whoosh.fields import Schema, TEXT, ID
 from whoosh.qparser import QueryParser, AndGroup, OrGroup
 from bs4 import BeautifulSoup
+from pagerank.pagerank_scorer import PageRankWeighting
 import base64
 import tqdm
 
@@ -69,9 +69,14 @@ class Whoosh_Search:
         self.indexed = True
         print(f"The index contains {doc_count} documents.")
 
+
     # performs the search
     def retrieve(self,query_string):
-        with self.ix.searcher() as searcher:
+        # Create the custom weighting object
+        PR_weighting = PageRankWeighting()
+
+        # Perform the search using the custom weighting object
+        with self.ix.searcher(weighting=PR_weighting) as searcher:
             query = QueryParser("cleaned_content", self.ix.schema,group=AndGroup).parse(query_string) if self.and_group else QueryParser("cleaned_content", self.ix.schema,group=OrGroup).parse(query_string)
             results = searcher.search(query,limit=self.return_count)
             print(f"Found {len(results)} results for query: {query_string}")
@@ -81,7 +86,6 @@ class Whoosh_Search:
                 print("No results found for query: {query_string}")
                 return [] 
             else: 
-                print(f"First {count} result:")
                 result_items = []
                 for result in results[:count]:
                     file_name = result['file_name']

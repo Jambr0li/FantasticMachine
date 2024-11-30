@@ -23,7 +23,6 @@ def home():
         if query:
             print("query")
             regular_results = search.retrieve(query)
-            print('\n'.join([result[0] for result in regular_results][:10]))
 
             # get the related words from my word2vec model
             query_words = query.lower().split()
@@ -39,7 +38,6 @@ def home():
             extended_query = ' '.join(related_words)
 
             related_results = search.retrieve(extended_query) if extended_query else []
-            print("\n".join([result[0] for result in related_results][:10]))
 
             per_page_count = 10
             regular_total_page_count = len(regular_results)
