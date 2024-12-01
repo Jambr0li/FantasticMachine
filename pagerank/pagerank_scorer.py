@@ -28,6 +28,7 @@ class PageRankScorer(scoring.BaseScorer):
         self.base_scorer = base_scorer
         self.pagerank_dict = pagerank_dict
         self.max = max(self.pagerank_dict.values())
+        # print([(i, rank) for i, rank in self.pagerank_dict.items()][:5])
 
     # Return the maximum quality score
     def max_quality(self):
@@ -40,5 +41,7 @@ class PageRankScorer(scoring.BaseScorer):
         docnum = matcher.id()
         pagerank = self.pagerank_dict.get(docnum, 0)
         # Combine the scores; you can adjust the weighting of page rank here
-        combined_score = base_score * pagerank
+        max_base_score = self.base_scorer.max_quality()
+        alpha = 0.3
+        combined_score = (alpha * (base_score/max_base_score)) + ((1 - alpha) * (pagerank/0.05))
         return combined_score
