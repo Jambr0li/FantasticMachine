@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 # Processing
 import tqdm
 import numpy as np
-import cupy as cp
+# import cupy as cp
 import scipy.sparse as sp
 
 # Indexing
